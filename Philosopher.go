@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 )
@@ -10,20 +9,23 @@ type philosopher struct {
 	forkLeft, forkRight *fork
 	id                  int
 	timesEaten          int
+	chanOut				chan bool
 }
 
-func NewPhil(id int, left fork, right fork) {
+func NewPhil(id int, left fork, right fork) *philosopher {
 	p := new(philosopher)
 	p.id = id
 	p.forkLeft = &left
 	p.forkRight = &right
+	p.chanOut = make(chan bool, 1)
 
 	go getForks(p)
+	return p
 }
 
-func (p philosopher) eat() {
+func (p *philosopher) eat() {
 	p.timesEaten++
-	fmt.Printf("Philosopher %d is eating for the %d. time\n", p.id, p.timesEaten)
+	p.chanOut <- true
 }
 
 func getForks(p *philosopher) {
@@ -47,37 +49,9 @@ func getForks(p *philosopher) {
 		default:
 		}
 	}
-
 }
 
 func think() {
 	time.Sleep(time.Duration(rand.Int31n(2) * int32(time.Second)))
 }
 
-/*
-the folowing methods might work after making the channels buffered -_-
-
-func getForks(p *philosopher)  {
-	fmt.Printf("phil %d tries to get forks\n", p.id)
-	if getFork(p.forkLeft){
-		fmt.Printf("Philosopher %d picked up fork %d\n", p.id, p.forkLeft.id)
-		if getFork(p.forkRight) {
-			fmt.Printf("Philosopher %d picked up fork %d\n", p.id, p.forkRight.id)
-			p.eat()
-			p.forkRight.fChIn <- "im done"
-			fmt.Printf("Philosopher %d returns fork %d\n", p.id, p.forkRight.id)
-		}
-		fmt.Printf("Philosopher %d returns fork %d\n", p.id, p.forkLeft.id)
-		p.forkLeft.fChIn <- "im done"
-	}
-
-	think(p)
-}
-
-func getFork(f *fork) bool {
-	fmt.Printf("tries to get fork %d\n", f.id)
-	f.fChIn <- "fork ready?"
-	var answer string = <-f.fChOut
-	fmt.Println(answer)
-	return answer == "avaliable"
-} */

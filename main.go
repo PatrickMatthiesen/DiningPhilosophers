@@ -4,25 +4,41 @@ import "fmt"
 
 func main() {
 	var forks [5]*fork
+
 	fmt.Println("makes forks")
 	for i := 0; i < 5; i++ {
 		forks[i] = NewFork(i)
 	}
+
 	fmt.Println("makes phils")
-	NewPhil(0, *forks[0], *forks[1])
-	NewPhil(1, *forks[1], *forks[2])
-	NewPhil(2, *forks[2], *forks[3])
-	NewPhil(3, *forks[3], *forks[4])
-	NewPhil(4, *forks[0], *forks[4])
-/* 	for i := 0; i < 5; i++ {
+
+	var phils [5]*philosopher
+	for i := 0; i < 5; i++ {
 		if i==4 {
-			NewPhil(i,*forks[0], *forks[i])
+			phils[i] = NewPhil(i,*forks[0], *forks[i])
 			continue
 		}
-		NewPhil(i,*forks[i], *forks[i+1])
-	}*/
+		phils[i] = NewPhil(i,*forks[i], *forks[i+1])
+	}
 
 	for {
-		
+		for _, fork := range forks{
+			select {
+				case <- fork.chanOut: {
+					fmt.Printf("fork %d has been used %d times\n", fork.id, fork.timesUsed)
+				}
+				default:
+			}
+			
+		}
+		for _, phil := range phils{
+			select {
+				case <- phil.chanOut: {
+					fmt.Printf("Philosopher %d has eaten for the %d. time\n", phil.id, phil.timesEaten)
+				}
+				default:
+			}
+		}
 	}
 }
+
