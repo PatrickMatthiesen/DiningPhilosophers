@@ -9,7 +9,8 @@ type philosopher struct {
 	forkLeft, forkRight *fork
 	id                  int
 	timesEaten          int
-	chanOut				chan bool
+	chanOut				chan int
+	chanIn				chan bool
 }
 
 func NewPhil(id int, left fork, right fork) *philosopher {
@@ -17,7 +18,8 @@ func NewPhil(id int, left fork, right fork) *philosopher {
 	p.id = id
 	p.forkLeft = &left
 	p.forkRight = &right
-	p.chanOut = make(chan bool, 1)
+	p.chanOut = make(chan int, 2)
+	p.chanIn = make(chan bool, 1)
 
 	go getForks(p)
 	return p
@@ -25,11 +27,19 @@ func NewPhil(id int, left fork, right fork) *philosopher {
 
 func (p *philosopher) eat() {
 	p.timesEaten++
-	p.chanOut <- true
 }
 
 func getForks(p *philosopher) {
 	for {
+		select {
+		case <-p.chanIn:
+			{
+				p.chanOut <- p.timesEaten
+				p.chanOut <- p.id
+		}
+		default:
+		}
+
 		select {
 		case <-p.forkLeft.free:
 			{

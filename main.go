@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func main() {
 	var forks [5]*fork
@@ -23,22 +26,24 @@ func main() {
 
 	for {
 		for _, fork := range forks{
+			fork.chanIn <- true
 			select {
-				case <- fork.chanOut: {
-					fmt.Printf("fork %d has been used %d times\n", fork.id, fork.timesUsed)
+				case timesUsed := <- fork.chanOut: {
+					fmt.Printf("fork %d has been used %d times\n", <-fork.chanOut, timesUsed)
 				}
 				default:
 			}
-			
 		}
 		for _, phil := range phils{
+			phil.chanIn <- true
 			select {
-				case <- phil.chanOut: {
-					fmt.Printf("Philosopher %d has eaten for the %d. time\n", phil.id, phil.timesEaten)
+				case timesEaten := <- phil.chanOut: {
+					fmt.Printf("Philosopher %d has eaten for the %d. time\n", <- phil.chanOut, timesEaten)
 				}
 				default:
 			}
 		}
+		time.Sleep(time.Duration(2* int32(time.Second)))
 	}
 }
 
