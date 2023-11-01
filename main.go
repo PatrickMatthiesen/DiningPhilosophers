@@ -5,45 +5,70 @@ import (
 	"time"
 )
 
-func main() {
-	var forks [5]*fork
+const rounds = 50 // number of times a philospher must eat
+const eat_time = 100 // eating time
 
-	fmt.Println("makes forks")
-	for i := 0; i < 5; i++ {
-		forks[i] = NewFork(i)
+func philosopher(Left, Right chan string, id int) {
+
+	counter := 0
+
+	for i := 0; i < rounds; i++ {
+		Left <- "acquire"
+		<-Left
+		Right <- "acquire"
+		<-Right
+
+		fmt.Println("Hello, I am philosopher", id, "and have already eaten", counter, "times.")
+		time.Sleep(eat_time) // Eating...
+
+		Left <- "release"
+		Right <- "release"
+		counter++
 	}
 
-	fmt.Println("makes phils")
+	fmt.Println("philosopher", id, " terminated!")
+}
 
-	var phils [5]*philosopher
-	for i := 0; i < 5; i++ {
-		if i==4 {
-			phils[i] = NewPhil(i,*forks[0], *forks[i])
-			continue
-		}
-		phils[i] = NewPhil(i,*forks[i], *forks[i+1])
-	}
-
+func fork(Left, Right chan string) {
 	for {
-		for _, fork := range forks{
-			fork.chanIn <- true
-			select {
-				case timesUsed := <- fork.chanOut: {
-					fmt.Printf("fork %d has been used %d times\n", <-fork.chanOut, timesUsed)
-				}
-				default:
-			}
+		select {
+		case <-Left:
+			Left <- "granted"
+			<-Left
+		case <-Right:
+			Right <- "granted"
+			<-Right
 		}
-		for _, phil := range phils{
-			phil.chanIn <- true
-			select {
-				case timesEaten := <- phil.chanOut: {
-					fmt.Printf("Philosopher %d has eaten for the %d. time\n", <- phil.chanOut, timesEaten)
-				}
-				default:
-			}
-		}
-		time.Sleep(time.Duration(2* int32(time.Second)))
 	}
 }
 
+func main() {
+	fmt.Println("Hi, this is the dining philosophers problem")
+
+	// each fork has two channels - one for receiving requests and one for replying
+	fork0L, fork0R := make(chan string), make(chan string)
+	fork1L, fork1R := make(chan string), make(chan string)
+	fork2L, fork2R := make(chan string), make(chan string)
+	fork3L, fork3R := make(chan string), make(chan string)
+	fork4L, fork4R := make(chan string), make(chan string)
+
+	go fork(fork0L, fork0R)
+	go fork(fork1L, fork1R)
+	go fork(fork2L, fork2R)
+	go fork(fork3L, fork3R)
+	go fork(fork4L, fork4R)
+
+	go philosopher(fork0R, fork1L, 0)
+	go philosopher(fork1R, fork2L, 1)
+	go philosopher(fork2R, fork3L, 2)
+	go philosopher(fork3R, fork4L, 3)
+	//	go philosopher(fork4OutR, fork4InR, fork0OutL, fork0InL, query4, 4) // with possible deadlock
+	go philosopher(fork0L, fork4R, 4) // no deadlock
+
+	for {
+		for _, r := range `-\|/` {
+			fmt.Printf("\r%c", r)
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
+}
