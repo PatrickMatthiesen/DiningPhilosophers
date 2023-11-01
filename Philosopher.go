@@ -14,12 +14,13 @@ type philosopher struct {
 }
 
 func NewPhil(id int, left fork, right fork) *philosopher {
-	p := new(philosopher)
-	p.id = id
-	p.forkLeft = &left
-	p.forkRight = &right
-	p.chanOut = make(chan int, 2)
-	p.chanIn = make(chan bool, 1)
+	p := &philosopher {
+		id: id,
+		forkLeft: &left,
+		forkRight: &right,
+		chanOut: make(chan int, 2),
+		chanIn: make(chan bool, 1),
+	}
 
 	go getForks(p)
 	return p
